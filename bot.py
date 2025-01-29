@@ -1,9 +1,10 @@
+import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from transliterate import translit
 
-# Botni ishga tushirish uchun Tokenni kiritish
-TOKEN = '8165659026:AAGjrs7mL7HwiYl3tgavtNVEWXg5HqCjKcs'
+# Telegram API tokenini environment variable'dan olish
+TOKEN = os.getenv('8165659026:AAGjrs7mL7HwiYl3tgavtNVEWXg5HqCjKcs')
 
 # Start komandasi
 def start(update, context):
@@ -39,7 +40,7 @@ def text_translation(update, context):
     if text.isascii():
         # Lotin alifbosida bo'lsa
         converted_text = translit(text, 'ru', reversed=True)
-    elif all(ord(char) < 128 for char in text):
+    elif all(ord(char) >= 128 for char in text):
         # Kirill alifbosida bo'lsa
         converted_text = translit(text, 'ru')
     else:
@@ -49,15 +50,18 @@ def text_translation(update, context):
 
 # Main funksiyasi
 def main():
+    # Botni ishga tushirish
     updater = Updater(TOKEN, use_context=True)
     dispatcher = updater.dispatcher
 
+    # Handlerlarni qo'shish
     dispatcher.add_handler(CommandHandler('start', start))
     dispatcher.add_handler(CallbackQueryHandler(latin_to_cyrillic, pattern='latin_to_cyrillic'))
     dispatcher.add_handler(CallbackQueryHandler(cyrillic_to_latin, pattern='cyrillic_to_latin'))
     dispatcher.add_handler(CallbackQueryHandler(auto, pattern='auto'))
-    dispatcher.add_handler(MessageHandler(Filters.text, text_translation))
+    dispatcher.add_handler(MessageHandler(filters.TEXT, text_translation))
 
+    # Pollingni boshlash
     updater.start_polling()
     updater.idle()
 
