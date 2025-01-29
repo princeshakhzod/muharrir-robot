@@ -78,7 +78,7 @@ async def text_translation(update, context):
     await update.message.reply_text(converted_text)
 
 # Main funksiyasi
-async def main():
+def main():
     # Botni ishga tushirish
     application = Application.builder().token(TOKEN).build()
 
@@ -89,8 +89,7 @@ async def main():
     application.add_handler(MessageHandler(filters.TEXT, text_translation))
 
     # Pollingni boshlash
-    await application.run_polling()
+    application.run_polling()
 
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())  # Bu yerda asyncio.run() ishlatish to'g'ri
+    main()  # asyncio.run() ishlatmaslik kerak
