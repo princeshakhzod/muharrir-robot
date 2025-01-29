@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Start komandasi
 async def start(update, context):
+    # Doimiy ko'rinadigan tugmalarni yaratish
     keyboard = [
         [InlineKeyboardButton("LOTIN ➡️ KIRILL", callback_data='latin_to_cyrillic')],
         [InlineKeyboardButton("КИРИЛЛ ➡️ ЛОТИН", callback_data='cyrillic_to_latin')],
