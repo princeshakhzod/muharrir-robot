@@ -1,69 +1,78 @@
-import telebot
+import os
 import requests
 import datetime
+import telebot
+from telebot import types
 
-# Telegram bot tokenini shu yerga kiriting
-TOKEN = "8168027431:AAEep52n4U9pP65eTZmO09LnuUqN5wION04"
+# Telegram bot token va AccuWeather API kalitini muhit o'zgaruvchilardan olish
+TOKEN = os.getenv("8168027431:AAEep52n4U9pP65eTZmO09LnuUqN5wION04")
+API_KEY = os.getenv("n9Nd7iseF4VOZthNyg1Ilho2kvAewhSr")
+
+# Telegram botini ishga tushurish
 bot = telebot.TeleBot(TOKEN)
 
-# AccuWeather API kalitingiz
-API_KEY = "n9Nd7iseF4VOZthNyg1Ilho2kvAewhSr"
-
-# Viloyatlar va ularning AccuWeather lokatsiya kodlari (o'zingiz to'ldiring)
+# Viloyatlar va ularning AccuWeather location kodlari
 locations = {
-    "Andijon": "123456",
-    "Buxoro": "654321",
+    "Andijon": "349727",
+    "Buxoro": "123456",
     "Fargʻona": "789012",
     "Jizzax": "345678",
-    "Namangan": "987654",
-    "Navoiy": "321098",
-    "Qashqadaryo": "210987",
-    "Qoraqalpogʻiston Respublikasi": "456789",
-    "Samarqand": "567890",
-    "Sirdaryo": "876543",
-    "Surxondaryo": "765432",
-    "Toshkent": "432109",
-    "Xorazm": "543210",
+    "Namangan": "567890",
+    "Navoiy": "678901",
+    "Qashqadaryo": "890123",
+    "Qoraqalpogʻiston Respublikasi": "901234",
+    "Samarqand": "234567",
+    "Sirdaryo": "345789",
+    "Surxondaryo": "456890",
+    "Toshkent": "567123",
+    "Xorazm": "678234"
 }
 
-# Boshlang'ich xabar
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+# Botning start komandasiga javob berish
+@bot.message_handler(commands=["start"])
+def start(message):
+    # Salomlashish va hudud tanlash uchun tugmalar
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     for region in locations.keys():
-        markup.add(telebot.types.KeyboardButton(region))
+        markup.add(types.KeyboardButton(region))
     
-    bot.send_message(message.chat.id, 
-                     "Salom!👋\n"
-                     "Bot Shakhzod Norkobilov tomonidan ishlab chiqilgan!👨🏻‍💻\n"
-                     "Murojaat uchun: @shakhzod_norkobilov ✍️\n\n"
-                     "Hududni tanlang:", 
-                     reply_markup=markup)
+    bot.send_message(
+        message.chat.id,
+        "Salom!👋\nBot Shakhzod Norkobilov tomonidan ishlab chiqilgan!👨🏻‍💻\nMurojaat uchun: @shakhzod_norkobilov ✍️\n\nHududni tanlang:",
+        reply_markup=markup
+    )
 
-# Viloyat tanlanganda ob-havo ma'lumotlarini olish
+# Foydalanuvchi hududni tanlaganida ob-havo ma'lumotini olish
 @bot.message_handler(func=lambda message: message.text in locations)
 def get_weather(message):
     region = message.text
     location_code = locations[region]
     url = f"http://dataservice.accuweather.com/forecasts/v1/daily/5day/{location_code}?apikey={API_KEY}&language=uz-uz&metric=true"
 
+    # API dan ma'lumot olish
     response = requests.get(url)
     
+    # Agar API javobi muvaffaqiyatli bo'lsa
     if response.status_code == 200:
-        data = response.json()
-        forecast = f"📍 *{region}* hududining 5 kunlik ob-havo ma'lumoti:\n\n"
+        try:
+            data = response.json()
+            forecast = f"📍 *{region}* hududining 5 kunlik ob-havo ma'lumoti:\n\n"
 
-        for day in data['DailyForecasts']:
-            date = datetime.datetime.strptime(day['Date'], "%Y-%m-%dT%H:%M:%S%z").strftime("%d-%b, %A")
-            min_temp = day['Temperature']['Minimum']['Value']
-            max_temp = day['Temperature']['Maximum']['Value']
-            condition = day['Day']['IconPhrase']
+            # 5 kunlik ob-havo ma'lumotlarini chiqarish
+            for day in data['DailyForecasts']:
+                date = datetime.datetime.strptime(day['Date'], "%Y-%m-%dT%H:%M:%S%z").strftime("%d-%b, %A")
+                min_temp = day['Temperature']['Minimum']['Value']
+                max_temp = day['Temperature']['Maximum']['Value']
+                condition = day['Day']['IconPhrase']
 
-            forecast += f"📅 *{date}*\n🌡 {min_temp}°C - {max_temp}°C\n🌥 {condition}\n\n"
+                forecast += f"📅 *{date}*\n🌡 {min_temp}°C - {max_temp}°C\n🌥 {condition}\n\n"
 
-        bot.send_message(message.chat.id, forecast, parse_mode="Markdown")
+            # Foydalanuvchiga ob-havo ma'lumotlarini yuborish
+            bot.send_message(message.chat.id, forecast, parse_mode="Markdown")
+        except Exception as e:
+            bot.send_message(message.chat.id, f"❌ Xatolik yuz berdi: {str(e)}")
     else:
-        bot.send_message(message.chat.id, "Ob-havo ma'lumotlarini olishda xatolik yuz berdi. Keyinroq urinib ko'ring.")
+        bot.send_message(message.chat.id, f"❌ Ob-havo ma'lumotlarini olishda xatolik yuz berdi. Xatolik kodi: {response.status_code}")
 
-# Botni doimiy ishga tushirish
+# Botni ishga tushurish
 bot.polling(none_stop=True)
