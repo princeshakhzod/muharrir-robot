@@ -3,13 +3,13 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 # Telegram API tokenini bevosita kiritish (bu xavfsiz emas, lekin faqat test uchun)
-TOKEN = '8165659026:AAGjrs7mL7HwiYl3tgavtNVEWXg5HqCjKcs'
+TOKEN = '8165659026:AAGjrs7mL7HwiYl3tgavtNVEWXg5HqCjKcs'  # o'z tokeningizni shu yerga qo'ying
 
 # Loggingni sozlash
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Alifbo o'zgartirishning lug'ati
+# Harf o'zgartirish lug'ati
 latin_to_cyrillic_dict = {
     'A': 'А', 'a': 'а', 'B': 'Б', 'b': 'б', 'D': 'Д', 'd': 'д', 'E': 'Э', 'e': 'е', 
     'F': 'Ф', 'f': 'ф', 'G': 'Г', 'g': 'г', 'H': 'Х', 'h': 'х', 'I': 'И', 'i': 'и',
@@ -24,12 +24,6 @@ latin_to_cyrillic_dict = {
 
 cyrillic_to_latin_dict = {v: k for k, v in latin_to_cyrillic_dict.items()}
 
-# Kirill alifbosidagi harflar
-cyrillic_letters = "Аа, Бб, Вв, Гг, Дд, Ее, Ёё, Жж, Зз, Ии, Йй, Кк, Лл, Мм, Нн, Оо, Пп, Рр, Сс, Тт, Уу, Фф, Хх, Цц, Чч, Шш, Щщ, Ъъ, Ыы, Ьь, Ээ, Юю, Яя"
-
-# Lotin alifbosidagi harflar
-latin_letters = "A a, B b, D d, E e, F f, G g, H h, I i, J j, Z z, X x, Q q, K k, L l, M m, N n, O o, P p, R r, S s, T t, U u, V v, X x, Y y, O' o', Sh sh, Ch ch, Ng ng"
-
 # Start komandasi
 async def start(update, context):
     keyboard = [
@@ -42,15 +36,7 @@ async def start(update, context):
         reply_markup=reply_markup
     )
 
-# Lotin alifbosini Kirillga o'zgartirish
-async def latin_to_cyrillic(update, context):
-    await update.message.reply_text("Matnni yuboring!")
-
-# Kirill alifbosini Lotinga o'zgartirish
-async def cyrillic_to_latin(update, context):
-    await update.message.reply_text("Матнни юборинг!")
-
-# Alifbo bo'yicha o'zgartirish
+# Matnni harfma-harf o'zgartirish
 def convert_text(text, conversion_dict):
     result = ''
     i = 0
@@ -70,26 +56,16 @@ def convert_text(text, conversion_dict):
 # Matnlarni alifbo bo'yicha o'zgartirish
 async def text_translation(update, context):
     text = update.message.text
-    
-    # "LOTIN ➡️ KIRILL" tugmasi bosilganda Kirill harflari bo'lsa, javob bermaslik
-    if any(char in cyrillic_letters for char in text):
-        return
-    
-    # "КИРИЛЛ ➡️ ЛОТИН" tugmasi bosilganda Lotin harflari bo'lsa, javob bermaslik
-    if any(char in latin_letters for char in text):
-        return
-    
-    # Matnni o'zgartirish
-    if text.isascii():
+
+    if 'LOTIN ➡️ KIRILL' in update.message.text:
         # Lotin alifbosini Kirillga o'zgartirish
         converted_text = convert_text(text, latin_to_cyrillic_dict)
-    elif all(ord(char) >= 128 for char in text):
+        await update.message.reply_text(converted_text)
+    
+    elif 'КИРИЛЛ ➡️ ЛОТИН' in update.message.text:
         # Kirill alifbosini Lotinga o'zgartirish
         converted_text = convert_text(text, cyrillic_to_latin_dict)
-    else:
-        converted_text = text  # Agar matnni o'zgartirish shart emas bo'lsa
-
-    await update.message.reply_text(converted_text)
+        await update.message.reply_text(converted_text)
 
 # Main funksiyasi
 def main():
@@ -98,12 +74,12 @@ def main():
 
     # Handlerlarni qo'shish
     application.add_handler(CommandHandler('start', start))
-    application.add_handler(MessageHandler(filters.Regex('^LOTIN ➡️ KIRILL$'), latin_to_cyrillic))
-    application.add_handler(MessageHandler(filters.Regex('^КИРИЛЛ ➡️ ЛОТИН$'), cyrillic_to_latin))
+    application.add_handler(MessageHandler(filters.Regex('^LOTIN ➡️ KIRILL$'), start))
+    application.add_handler(MessageHandler(filters.Regex('^КИРИЛЛ ➡️ ЛОТИН$'), start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_translation))
 
     # Pollingni boshlash
     application.run_polling()
 
 if __name__ == '__main__':
-    main()  # asyncio.run() ishlatmaslik kerak
+    main()
