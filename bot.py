@@ -1,5 +1,5 @@
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 
 # Telegram API tokenini bevosita kiritish (bu xavfsiz emas, lekin faqat test uchun)
@@ -27,11 +27,10 @@ cyrillic_to_latin_dict = {v: k for k, v in latin_to_cyrillic_dict.items()}
 # Start komandasi
 async def start(update, context):
     keyboard = [
-        [InlineKeyboardButton("LOTIN ➡️ KIRILL", callback_data='latin_to_cyrillic')],
-        [InlineKeyboardButton("КИРИЛЛ ➡️ ЛОТИН", callback_data='cyrillic_to_latin')],
-        [InlineKeyboardButton("AVTO✨", callback_data='auto')]
+        ['LOTIN ➡️ KIRILL', 'КИРИЛЛ ➡️ ЛОТИН'],
+        ['AVTO✨']
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
     await update.message.reply_text(
         "Salom!👋\nBot Shakhzod Norkobilov tomonidan ishlab chiqilgan!👨🏻‍💻\nMurojaat uchun: @shakhzod_norkobilov ✍️",
         reply_markup=reply_markup
@@ -39,13 +38,11 @@ async def start(update, context):
 
 # Lotin alifbosini Kirillga o'zgartirish
 async def latin_to_cyrillic(update, context):
-    await update.callback_query.answer()
-    await update.callback_query.message.reply_text("Matnni yuboring!")
+    await update.message.reply_text("Matnni yuboring!")
 
 # Kirill alifbosini Lotinga o'zgartirish
 async def cyrillic_to_latin(update, context):
-    await update.callback_query.answer()
-    await update.callback_query.message.reply_text("Матнни юборинг!")
+    await update.message.reply_text("Матнни юборинг!")
 
 # Alifbo bo'yicha o'zgartirish
 def convert_text(text, conversion_dict):
@@ -85,9 +82,9 @@ def main():
 
     # Handlerlarni qo'shish
     application.add_handler(CommandHandler('start', start))
-    application.add_handler(CallbackQueryHandler(latin_to_cyrillic, pattern='latin_to_cyrillic'))
-    application.add_handler(CallbackQueryHandler(cyrillic_to_latin, pattern='cyrillic_to_latin'))
-    application.add_handler(MessageHandler(filters.TEXT, text_translation))
+    application.add_handler(MessageHandler(filters.Regex('^LOTIN ➡️ KIRILL$'), latin_to_cyrillic))
+    application.add_handler(MessageHandler(filters.Regex('^КИРИЛЛ ➡️ ЛОТИН$'), cyrillic_to_latin))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_translation))
 
     # Pollingni boshlash
     application.run_polling()
