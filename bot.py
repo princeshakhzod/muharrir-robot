@@ -19,7 +19,7 @@ latin_to_cyrillic_dict = {
     'U': 'У', 'u': 'у', 'V': 'В', 'v': 'в', 'X': 'Х', 'x': 'х', 'Y': 'Й', 'y': 'й',
     'Z': 'З', 'z': 'з', 'O\'': 'Ў', 'o\'': 'ў', 'Ch': 'Ч', 'ch': 'ч', 'Ng': 'Нг', 'ng': 'нг',
     'Yo': 'Ё', 'yo': 'ё', 'Yu': 'Ю', 'yu': 'ю', 'Ye': 'Е', 'ye': 'е', 'Ya': 'Я', 'ya': 'я',
-    'Ъ': '’', 'ъ': '’'
+    'Ъ': '’', 'ъ': '’', '.': '.', ' ': ' '
 }
 
 cyrillic_to_latin_dict = {v: k for k, v in latin_to_cyrillic_dict.items()}
@@ -28,7 +28,6 @@ cyrillic_to_latin_dict = {v: k for k, v in latin_to_cyrillic_dict.items()}
 async def start(update, context):
     keyboard = [
         ['LOTIN ➡️ KIRILL', 'КИРИЛЛ ➡️ ЛОТИН'],
-        ['AVTO✨']
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
     await update.message.reply_text(
