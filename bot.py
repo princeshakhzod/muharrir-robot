@@ -1,9 +1,9 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 # Telegram API tokenini bevosita kiritish (bu xavfsiz emas, lekin faqat test uchun)
-TOKEN = '8165659026:AAGjrs7mL7HwiYl3tgavtNVEWXg5HqCjKcs'
+TOKEN = 'YOUR_BOT_API_TOKEN'
 
 # Loggingni sozlash
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -23,6 +23,12 @@ latin_to_cyrillic_dict = {
 }
 
 cyrillic_to_latin_dict = {v: k for k, v in latin_to_cyrillic_dict.items()}
+
+# Kirill alifbosidagi harflar
+cyrillic_letters = "Аа, Бб, Вв, Гг, Дд, Ее, Ёё, Жж, Зз, Ии, Йй, Кк, Лл, Мм, Нн, Оо, Пп, Рр, Сс, Тт, Уу, Фф, Хх, Цц, Чч, Шш, Щщ, Ъъ, Ыы, Ьь, Ээ, Юю, Яя"
+
+# Lotin alifbosidagi harflar
+latin_letters = "A a, B b, D d, E e, F f, G g, H h, I i, J j, Z z, X x, Q q, K k, L l, M m, N n, O o, P p, R r, S s, T t, U u, V v, X x, Y y, O' o', Sh sh, Ch ch, Ng ng"
 
 # Start komandasi
 async def start(update, context):
@@ -64,6 +70,16 @@ def convert_text(text, conversion_dict):
 # Matnlarni alifbo bo'yicha o'zgartirish
 async def text_translation(update, context):
     text = update.message.text
+    
+    # "LOTIN ➡️ KIRILL" tugmasi bosilganda Kirill harflari bo'lsa, javob bermaslik
+    if any(char in cyrillic_letters for char in text):
+        return
+    
+    # "КИРИЛЛ ➡️ ЛОТИН" tugmasi bosilganda Lotin harflari bo'lsa, javob bermaslik
+    if any(char in latin_letters for char in text):
+        return
+    
+    # Matnni o'zgartirish
     if text.isascii():
         # Lotin alifbosini Kirillga o'zgartirish
         converted_text = convert_text(text, latin_to_cyrillic_dict)
