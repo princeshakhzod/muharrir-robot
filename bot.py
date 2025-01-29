@@ -1,10 +1,15 @@
 import os
+import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from transliterate import translit
 
-# Telegram API tokenini environment variable'dan olish
-TOKEN = os.getenv('8165659026:AAGjrs7mL7HwiYl3tgavtNVEWXg5HqCjKcs')
+# Telegram API tokenini bevosita kiritish (bu xavfsiz emas, lekin faqat test uchun)
+TOKEN = '8165659026:AAGjrs7mL7HwiYl3tgavtNVEWXg5HqCjKcs'
+
+# Loggingni sozlash
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Start komandasi
 async def start(update, context):
