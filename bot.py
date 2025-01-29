@@ -1,4 +1,3 @@
-import os
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
@@ -13,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 # Start komandasi
 async def start(update, context):
-    # Doimiy ko'rinadigan tugmalarni yaratish
     keyboard = [
         [InlineKeyboardButton("LOTIN ➡️ KIRILL", callback_data='latin_to_cyrillic')],
         [InlineKeyboardButton("КИРИЛЛ ➡️ ЛОТИН", callback_data='cyrillic_to_latin')],
@@ -35,31 +33,22 @@ async def cyrillic_to_latin(update, context):
     await update.callback_query.answer()
     await update.callback_query.message.reply_text("Матнни юборинг!")
 
-# Matnni avtomatik tarzda tarjima qilish
-async def auto(update, context):
-    await update.callback_query.answer()
-    await update.callback_query.message.reply_text("Matnni yuboring!\nМатнни юборинг!")
-
 # Matnlarni alifbo bo'yicha o'zgartirish
 async def text_translation(update, context):
     text = update.message.text
     if text.isascii():
         # Lotin alifbosida bo'lsa
-        converted_text = translit(text, 'ru', reversed=True)
+        converted_text = translit(text, 'ru', reversed=True)  # Lotin -> Kirill
     elif all(ord(char) >= 128 for char in text):
         # Kirill alifbosida bo'lsa
-        converted_text = translit(text, 'ru')
+        converted_text = translit(text, 'ru')  # Kirill -> Lotin
     else:
-        converted_text = text
+        converted_text = text  # Agar matnni o'zgartirish shart emas bo'lsa
 
     await update.message.reply_text(converted_text)
 
-# Xatoliklarni qayta ishlash
-async def error(update, context):
-    logger.error(f"Error: {context.error}")
-
 # Main funksiyasi
-def main():
+async def main():
     # Botni ishga tushirish
     application = Application.builder().token(TOKEN).build()
 
@@ -67,14 +56,11 @@ def main():
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CallbackQueryHandler(latin_to_cyrillic, pattern='latin_to_cyrillic'))
     application.add_handler(CallbackQueryHandler(cyrillic_to_latin, pattern='cyrillic_to_latin'))
-    application.add_handler(CallbackQueryHandler(auto, pattern='auto'))
     application.add_handler(MessageHandler(filters.TEXT, text_translation))
 
-    # Xatoliklarni qayta ishlash
-    application.add_error_handler(error)
-
     # Pollingni boshlash
-    application.run_polling()
+    await application.run_polling()
 
 if __name__ == '__main__':
-    main()
+    import asyncio
+    asyncio.run(main())  # Bu yerda asyncio.run() ishlatish to'g'ri
