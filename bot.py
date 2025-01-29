@@ -70,5 +70,4 @@ async def main():
 
 if __name__ == '__main__':
     import asyncio
-    asyncio.create_task(main())
-    asyncio.get_event_loop().run_forever()
+    asyncio.run(main())  # Bu yerda asyncio.run() ishlatish to'g'ri
