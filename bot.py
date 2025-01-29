@@ -4,7 +4,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from transliterate import translit
 
-# Telegram API tokenini bevosita kiritish (bu xavfsiz emas, lekin faqat test uchun)
+# Telegram API tokenini bevosita kiritish (bu xavfsiz emas)
 TOKEN = '8165659026:AAGjrs7mL7HwiYl3tgavtNVEWXg5HqCjKcs'
 
 # Loggingni sozlash
@@ -53,6 +53,10 @@ async def text_translation(update, context):
 
     await update.message.reply_text(converted_text)
 
+# Xatoliklarni qayta ishlash (Error handling)
+async def error(update, context):
+    logger.error(f"Error: {context.error}")
+
 # Main funksiyasi
 async def main():
     # Botni ishga tushirish
@@ -64,6 +68,9 @@ async def main():
     application.add_handler(CallbackQueryHandler(cyrillic_to_latin, pattern='cyrillic_to_latin'))
     application.add_handler(CallbackQueryHandler(auto, pattern='auto'))
     application.add_handler(MessageHandler(filters.TEXT, text_translation))
+
+    # Xatoliklarni qayta ishlash
+    application.add_error_handler(error)
 
     # Pollingni boshlash
     await application.run_polling()
