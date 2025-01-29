@@ -3,7 +3,7 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 # Telegram API tokenini bevosita kiritish (bu xavfsiz emas, lekin faqat test uchun)
-TOKEN = 'YOUR_BOT_API_TOKEN'
+TOKEN = '8165659026:AAGjrs7mL7HwiYl3tgavtNVEWXg5HqCjKcs'
 
 # Loggingni sozlash
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
