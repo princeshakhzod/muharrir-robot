@@ -1,82 +1,65 @@
-import telebot
-import requests
-from datetime import datetime
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from transliterate import translit
 
-# Telegram bot token va AccuWeather API kalitini o'rnatish
-TOKEN = "8168027431:AAEep52n4U9pP65eTZmO09LnuUqN5wION04"
-API_KEY = "n9Nd7iseF4VOZthNyg1Ilho2kvAewhSr"
+# Botni ishga tushirish uchun Tokenni kiritish
+TOKEN = '8165659026:AAGjrs7mL7HwiYl3tgavtNVEWXg5HqCjKcs'
 
-bot = telebot.TeleBot(TOKEN)
+# Start komandasi
+def start(update, context):
+    keyboard = [
+        [InlineKeyboardButton("LOTIN ➡️ KIRILL", callback_data='latin_to_cyrillic')],
+        [InlineKeyboardButton("КИРИЛЛ ➡️ ЛОТИН", callback_data='cyrillic_to_latin')],
+        [InlineKeyboardButton("AVTO✨", callback_data='auto')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text(
+        "Salom!👋\nBot Shakhzod Norkobilov tomonidan ishlab chiqilgan!👨🏻‍💻\nMurojaat uchun: @shakhzod_norkobilov ✍️",
+        reply_markup=reply_markup
+    )
 
-# Viloyatlar ro'yxati
-regions = [
-    "Andijon", "Buxoro", "Fargʻona", "Jizzax", "Namangan", 
-    "Navoiy", "Qashqadaryo", "Qoraqalpogʻiston Respublikasi", 
-    "Samarqand", "Sirdaryo", "Surxondaryo", "Toshkent", "Xorazm"
-]
+# Lotin alifbosini Kirillga o'zgartirish
+def latin_to_cyrillic(update, context):
+    update.callback_query.answer()
+    update.callback_query.message.reply_text("Matnni yuboring!")
 
-# Shahar nomini qidirish uchun funksiya
-def get_location_key(city_name):
-    url = f"http://dataservice.accuweather.com/locations/v1/cities/search?apikey={API_KEY}&q={city_name}&language=en-us"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        if len(data) > 0:
-            return data[0]["Key"]
-        else:
-            return None  # Agar shahar topilmasa, None qaytarish
+# Kirill alifbosini Lotinga o'zgartirish
+def cyrillic_to_latin(update, context):
+    update.callback_query.answer()
+    update.callback_query.message.reply_text("Матнни юборинг!")
+
+# Matnni avtomatik tarzda tarjima qilish
+def auto(update, context):
+    update.callback_query.answer()
+    update.callback_query.message.reply_text("Matnni yuboring!\nМатнни юборинг!")
+
+# Matnlarni alifbo bo'yicha o'zgartirish
+def text_translation(update, context):
+    text = update.message.text
+    if text.isascii():
+        # Lotin alifbosida bo'lsa
+        converted_text = translit(text, 'ru', reversed=True)
+    elif all(ord(char) < 128 for char in text):
+        # Kirill alifbosida bo'lsa
+        converted_text = translit(text, 'ru')
     else:
-        print(f"Error: {response.status_code}")  # Xatolik haqida ma'lumot
-        return None
+        converted_text = text
 
-# 5 kunlik ob-havo prognozini olish
-def get_weather_forecast(location_key):
-    url = f"http://dataservice.accuweather.com/forecasts/v1/daily/5day/{location_key}?apikey={API_KEY}&language=en-us"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        forecast = []
-        for day in data['DailyForecasts']:
-            forecast.append({
-                'date': datetime.utcfromtimestamp(day['Date']/1000).strftime('%Y-%m-%d'),
-                'min_temp': day['Temperature']['Minimum']['Value'],
-                'max_temp': day['Temperature']['Maximum']['Value'],
-                'weather': day['Day']['IconPhrase']
-            })
-        return forecast
-    else:
-        print(f"Error: {response.status_code}")  # Xatolik haqida ma'lumot
-        return None
+    update.message.reply_text(converted_text)
 
-# Start komandasiga javob berish
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, "Salom!👋\nBot Shakhzod Norkobilov tomonidan ishlab chiqilgan!👨🏻‍💻\nMurojaat uchun: @shakhzod_norkobilov ✍️\n\nHududni tanlang:")
-    
-    markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    for region in regions:
-        markup.add(region)
-    bot.send_message(message.chat.id, "Hududni tanlang", reply_markup=markup)
+# Main funksiyasi
+def main():
+    updater = Updater(TOKEN, use_context=True)
+    dispatcher = updater.dispatcher
 
-# Foydalanuvchi viloyat tanlasa
-@bot.message_handler(func=lambda message: message.text in regions)
-def send_forecast(message):
-    region = message.text.strip().title()  # Foydalanuvchidan kiritilgan matnni tozalash va titullarni o'zgartirish
-    location_key = get_location_key(region)
-    
-    if location_key:
-        forecast_data = get_weather_forecast(location_key)
-        if forecast_data:
-            forecast_text = f"{region} viloyati uchun 5 kunlik ob-havo prognozi:\n\n"
-            for day in forecast_data:
-                forecast_text += f"{day['date']} - Min: {day['min_temp']}°C, Max: {day['max_temp']}°C, Weather: {day['weather']}\n"
-            bot.send_message(message.chat.id, forecast_text)
-        else:
-            bot.send_message(message.chat.id, "Ob-havo ma'lumotlarini olishda xatolik yuz berdi. Keyinroq urinib ko'ring.")
-    else:
-        bot.send_message(message.chat.id, "Shahar topilmadi. Iltimos, to'g'ri shahar nomini kiriting.")
+    dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CallbackQueryHandler(latin_to_cyrillic, pattern='latin_to_cyrillic'))
+    dispatcher.add_handler(CallbackQueryHandler(cyrillic_to_latin, pattern='cyrillic_to_latin'))
+    dispatcher.add_handler(CallbackQueryHandler(auto, pattern='auto'))
+    dispatcher.add_handler(MessageHandler(Filters.text, text_translation))
 
-# Botni ishga tushirish
-bot.polling()
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
